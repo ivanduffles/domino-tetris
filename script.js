@@ -128,22 +128,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function rotatePieceClockwise() {
-    if (!state.currentPiece || state.lockBusy || state.currentPiece.orientation !== 'H' && state.currentPiece.orientation !== 'V') return;
+    if (!state.currentPiece || state.lockBusy) return;
 
-    const [c1, c2] = state.currentPiece.cells;
-    const horizontal = state.currentPiece.orientation === 'H';
-    const anchor = horizontal ? (c1.col <= c2.col ? c1 : c2) : (c1.row >= c2.row ? c1 : c2);
-    const other = anchor === c1 ? c2 : c1;
+    const [pivot, arm] = state.currentPiece.cells;
+    const dRow = arm.row - pivot.row;
+    const dCol = arm.col - pivot.col;
 
-    let rotated;
-    let nextOrientation;
-    if (horizontal) {
-      rotated = [{ ...anchor }, { ...other, row: anchor.row - 1, col: anchor.col }];
-      nextOrientation = 'V';
-    } else {
-      rotated = [{ ...anchor }, { ...other, row: anchor.row, col: anchor.col + 1 }];
-      nextOrientation = 'H';
-    }
+    const rotated = [
+      { ...pivot },
+      { ...arm, row: pivot.row + dCol, col: pivot.col - dRow },
+    ];
 
     const kicks = [
       { x: 0, y: 0 },
@@ -156,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const trial = rotated.map((c) => ({ ...c, row: c.row + kick.y, col: c.col + kick.x }));
       if (pieceFits(trial)) {
         state.currentPiece.cells = trial;
-        state.currentPiece.orientation = nextOrientation;
+        state.currentPiece.orientation = trial[0].row === trial[1].row ? 'H' : 'V';
         return;
       }
     }
@@ -303,18 +297,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function collapseRows() {
+    const compacted = makeEmptyCells();
+    let writeRow = HEIGHT - 1;
+
     for (let row = HEIGHT - 1; row >= 0; row -= 1) {
-      if (rowIsEmpty(row)) {
-        for (let above = row - 1; above >= 0; above -= 1) {
-          for (let col = 0; col < WIDTH; col += 1) {
-            state.cells[idx(above + 1, col)] = { ...state.cells[idx(above, col)] };
-          }
-        }
-        for (let col = 0; col < WIDTH; col += 1) state.cells[idx(0, col)] = { taken: false, pip: null, dominoId: null, seam: '' };
-        row += 1;
+      if (rowIsEmpty(row)) continue;
+      for (let col = 0; col < WIDTH; col += 1) {
+        compacted[idx(writeRow, col)] = { ...state.cells[idx(row, col)] };
       }
+      writeRow -= 1;
     }
 
+    state.cells = compacted;
     recomputeLockedSeams();
   }
 
@@ -529,6 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function adjustSoftDrop(isHeld) {
     if (!state || !state.isRunning || state.gameOver) return;
+    if (state.softDropHeld === isHeld) return;
     state.softDropHeld = isHeld;
     updateDropSpeed();
   }
@@ -546,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (key === 'ArrowLeft' || key === 'a' || key === 'A') movePiece(0, -1);
     if (key === 'ArrowRight' || key === 'd' || key === 'D') movePiece(0, 1);
     if (key === 'ArrowUp' || key === 'w' || key === 'W') rotatePieceClockwise();
-    if (key === 'ArrowDown' || key === 's' || key === 'S') adjustSoftDrop(true);
+    if ((key === 'ArrowDown' || key === 's' || key === 'S') && !e.repeat) adjustSoftDrop(true);
     if (code === 'Space' || code === 'ShiftRight') hardDrop();
 
     render();
