@@ -314,6 +314,43 @@ document.addEventListener('DOMContentLoaded', () => {
         row += 1;
       }
     }
+
+    recomputeLockedSeams();
+  }
+
+  function recomputeLockedSeams() {
+    for (let row = 0; row < HEIGHT; row += 1) {
+      for (let col = 0; col < WIDTH; col += 1) {
+        const cell = state.cells[idx(row, col)];
+        if (cell.taken) cell.seam = '';
+      }
+    }
+
+    for (let row = 0; row < HEIGHT; row += 1) {
+      for (let col = 0; col < WIDTH; col += 1) {
+        const current = state.cells[idx(row, col)];
+        if (!current.taken || !current.dominoId) continue;
+
+        const rightCol = col + 1;
+        const downRow = row + 1;
+
+        if (rightCol < WIDTH) {
+          const right = state.cells[idx(row, rightCol)];
+          if (right.taken && right.dominoId === current.dominoId) {
+            current.seam = 'right';
+            right.seam = 'left';
+          }
+        }
+
+        if (downRow < HEIGHT) {
+          const down = state.cells[idx(downRow, col)];
+          if (down.taken && down.dominoId === current.dominoId) {
+            current.seam = 'bottom';
+            down.seam = 'top';
+          }
+        }
+      }
+    }
   }
 
   function rowIsEmpty(row) {
@@ -323,10 +360,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateDropSpeed() {
     state.dropIntervalMs = Math.max(150, 1000 - (50 * Math.floor(state.totalRowsCleared / 10)));
-    if (state.isRunning && !state.isPaused && !state.gameOver) {
+
+    if (!state.isRunning || state.gameOver) return;
+
+    const intervalMs = state.softDropHeld ? Math.max(80, Math.floor(state.dropIntervalMs / 4)) : state.dropIntervalMs;
+
+    if (state.isPaused) {
       clearInterval(state.gravityTimerId);
-      state.gravityTimerId = setInterval(tick, state.softDropHeld ? Math.max(80, Math.floor(state.dropIntervalMs / 4)) : state.dropIntervalMs);
+      state.gravityTimerId = null;
+      return;
     }
+  }
+
+  function rowIsEmpty(row) {
+    for (let col = 0; col < WIDTH; col += 1) if (state.cells[idx(row, col)].taken) return false;
+    return true;
+  }
+
+    clearInterval(state.gravityTimerId);
+    state.gravityTimerId = setInterval(tick, intervalMs);
   }
 
   function tick() {
@@ -345,7 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startHardBtn.disabled = true;
     if (!spawnPiece()) return;
     updateDropSpeed();
-    state.gravityTimerId = setInterval(tick, state.dropIntervalMs);
     updateHUD();
     render();
   }
@@ -469,6 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state || !state.isRunning || state.gameOver) return;
     state.isPaused = !state.isPaused;
     messageEl.textContent = state.isPaused ? 'Paused' : 'Game running';
+    updateDropSpeed();
     render();
   }
 
