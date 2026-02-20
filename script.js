@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isPaused: false,
       isRunning: false,
       gravityTimerId: null,
+      lastDropAtMs: 0,
       softDropHeld: false,
       lockBusy: false,
       gameOver: false,
@@ -357,19 +358,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!state.isRunning || state.gameOver) return;
 
-    const intervalMs = state.softDropHeld ? Math.max(80, Math.floor(state.dropIntervalMs / 4)) : state.dropIntervalMs;
-
     if (state.isPaused) {
       clearInterval(state.gravityTimerId);
       state.gravityTimerId = null;
       return;
     }
-    clearInterval(state.gravityTimerId);
-    state.gravityTimerId = setInterval(tick, intervalMs);
+
+    if (!state.gravityTimerId) {
+      state.lastDropAtMs = Date.now();
+      state.gravityTimerId = setInterval(tick, 16);
+    }
   }
 
   function tick() {
     if (state.isPaused || state.gameOver || !state.currentPiece) return;
+
+    const now = Date.now();
+    const activeIntervalMs = state.softDropHeld ? Math.max(80, Math.floor(state.dropIntervalMs / 4)) : state.dropIntervalMs;
+    if (now - state.lastDropAtMs < activeIntervalMs) return;
+
+    state.lastDropAtMs = now;
     if (!movePiece(1, 0)) lockCurrentPiece();
     render();
   }
@@ -378,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initState();
     state.mode = mode;
     state.isRunning = true;
+    state.lastDropAtMs = Date.now();
     messageEl.textContent = 'Game running';
     modeEl.textContent = mode.toUpperCase();
     startEasyBtn.disabled = true;
