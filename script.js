@@ -370,13 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
       state.gravityTimerId = null;
       return;
     }
-  }
-
-  function rowIsEmpty(row) {
-    for (let col = 0; col < WIDTH; col += 1) if (state.cells[idx(row, col)].taken) return false;
-    return true;
-  }
-
     clearInterval(state.gravityTimerId);
     state.gravityTimerId = setInterval(tick, intervalMs);
   }
