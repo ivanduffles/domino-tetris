@@ -1,31 +1,48 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>GG | Tetris Game</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Domino Tetris</title>
 </head>
 <body>
+  <main class="app">
+    <section class="controls">
+      <h1>Domino Tetris</h1>
+      <p class="subtitle">All Fives-inspired rules</p>
+      <div class="button-row">
+        <button id="start-easy">Start Easy</button>
+        <button id="start-hard">Start Hard</button>
+      </div>
+      <div class="button-row">
+        <button id="pause-button">Pause (P)</button>
+        <button id="restart-button">Restart (R)</button>
+      </div>
+      <p class="help">Move: A/D or ←/→ · Drop: S/↓ · Rotate: W/↑ · Hard drop: Space/RightShift</p>
+    </section>
 
-    <div class="logo-png">
-        <img src="./img/GGomes Logotipo dark mode.png" alt="GGomes Logotipo">
-    </div>
+    <section class="game-wrap">
+      <div class="board-wrap">
+        <div id="grid" class="grid" aria-label="Domino Tetris board"></div>
+        <div id="pause-overlay" class="pause-overlay hidden">PAUSED</div>
+        <div id="float-layer" class="float-layer" aria-hidden="true"></div>
+      </div>
+      <div id="row-sums" class="row-sums" aria-label="Row sums"></div>
+    </section>
 
-    <div class="tetris-container">
-        <div class="grid" id="grid"></div>
+    <aside class="status">
+      <p>Score: <span id="score">0</span></p>
+      <p>Lives: <span id="lives">10</span></p>
+      <p>Streak: <span id="streak">OFF</span></p>
+      <p>Multiplier: <span id="multiplier">×1</span></p>
+      <p>Rows Cleared: <span id="rows-cleared">0</span></p>
+      <p>Speed: <span id="speed">1000ms</span></p>
+      <p>Mode: <span id="mode">-</span></p>
+      <p id="message" class="message">Press Start Easy or Start Hard</p>
+    </aside>
+  </main>
 
-        <div class="info">
-            <p>Score: <span id="score">0</span></p>
-            <button id="start-button">Iniciar</button>
-        </div>
-    </div>
-
-    <div class="water-mark">
-        <img src="./img/GGomes Logotipo dark mode.png" alt="GGomes Logotipo">
-        <h2>Powered by <strong>Guilherme Gomes</strong>.</h2>
-    </div>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
